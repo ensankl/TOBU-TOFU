@@ -1,29 +1,57 @@
 import pyxel
+import sensor
 
 class App:
     '''
 
     '''
     def __init__(self):
+        #make instance of Player(spawnX, spawnY)
         self.player = Player(35,35)
+        #make instance of Stage(windowWidth, windowHeight)
+        self.stage = Stage()
+        #initialize pyxel rendering WindowSize
         pyxel.init(200, 150, caption="TouchME", fps=60)
-
-    def updater(self):
-        self.player.act()
-        self.player.updateAlive()
-
-        if not self.player.updateAlive():
-            self.sceneChanger()
+        #initialize list for sceneChanger function.
+        # WARNING : Set Same length for both lists.
+        self.listOfSCX = [180, 120, 80, 60, 40, 20, 0]
+        self.listOfSCY = [135, 90, 60, 45, 30, 15, 0]
 
     def render(self):
+
         pass
 
-    def isCollision(self):
-        pass
-
-    def sceneChanger(self):
+    def scene_changer(self):
          ##pyxel.clipで四角が狭くなり暗転してタイトルへ戻る
+         thisX = pyxel.width
+         thisY = pyxel.height
+         w = listOfSCX[0]
+         h = listOfSCY[0]
+         for i in range(len(listOfSCX)):
+            pyxel.clip(x1=thisX, y1=thisY, x2=w, y2=h)
+            thisX = w
+            thisY = h
+            w = w[i+1]
+            h = h[i+1]
+
+    def updater(self):
+        self.player.update_alive()
+        self.player.update_judge_move()
+
+        if not self.player.update_alive():
+            self.scene_changer()
+
+    def make_collision(self):
         pass
+    #ブロックの座標から１ブロックあたりの大きさは固定なので
+    # ブロックを置いた位置の原点(block.originX, block.originY)から
+    # (0, block.height), (block.width, 0), (block.width, (動くのはこっちだけ 中身は空洞で良い)block.height)
+    #の座標を参照して当たり判定をつける マップタイルは固定なので1blockあたりの判定を定数倍して使用する
+
+class Stage:
+    def __init__(self, width, height):
+        pass
+        pyxel.tilemap(0).set(0, 0, ["abcd"])
 
 
 class Player:
@@ -54,22 +82,61 @@ class Player:
                 bring back to title because player is dying.
     '''
     def __init__(self, x=0, y=0):
+        #initialize player's information
         self.posX = x
         self.posY = y
+        self.tall = 25
+        self.thickness = 10
+        self.listOfDoing = ["dowalk", "dofly", "doglide", "none"]
 
-    def updateAlive(self):
+        #initialize sensor's threshold
+        self.noise = 0
+        self.walk = 0
+        self.fly = 0
+        self.didFly = 0
+        self.glide = 0
+
+        #initialize stage collision
+
+    def update_alive(self):
         if pyxel.height < self.posY:
             return 0
         else :
             return 1
 
-    def moveJudge(self):
-        pass
-    ##sensor.pyからconvertedValueをもらって値の大きさで挙動がWalk, Fly, Glideか決める
+    def update_is_on_ground(self):
+        #if (self.posY + self.tall) = block.originY:
+            return 1
 
-    def act(self):
-        if None:
-            pass
+    def update_judge_move(self):
+        if self.update_is_on_ground():
+            if self.noise < sensor.convertedValue <= self.walk:
+                act(doWalk)
+            elif self.walk < sensor.convertedValue <= self.fly:
+                didFly = 1
+                act(doFly)
+                if self.fly < sensor.convertedValue <= Glide:
+                    act(doGlide)
+            else :
+                act(none)
+        else :
+            act(doFall)
+
+
+    def act(self, whatDoing):
+        doTime = 5
+        if whatDoing = "doWalk":
+            for i in doTime:
+                move(2, 0)
+        if whatDoing = "doFly"
+            for i in doTime:
+                move(2, 2)
+        if whatDoing = "doGlide"
+            for i in doTime:
+                move(2, -1)
+        if whatDoing = "doFall"
+            for i in doTime:
+                move(0, 2)
 
     def move(self, dx, dy):
         self.posX += dx
