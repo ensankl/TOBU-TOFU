@@ -1,5 +1,6 @@
 import pyxel
 import sensor
+from time import sleep
 
 class App:
     '''
@@ -21,9 +22,14 @@ class App:
         #initialize pyxel rendering WindowSize
         pyxel.init(200, 150, caption="TouchME", fps=60)
 
-    def render(self):
-
-        pass
+    def render(self, showMode = "none"):
+        if showMode == "showTitle":
+            pyxel.image(0).load(0, 0, "Title.png")
+            if pyxel.btn(pyxel.KEY_SPACE):
+                self.scene_changer()
+                #go to game screen
+        elif showMode == "none":
+            pass
 
     def scene_changer(self):
          ##pyxel.clipで四角が狭くなり暗転してタイトルへ戻る
@@ -33,6 +39,7 @@ class App:
          h = self.listOfSCY[0]
          for i in range(len(self.listOfSCX)):
             pyxel.clip(x1=thisX, y1=thisY, x2=w, y2=h)
+            sleep(0.5)
             thisX = w
             thisY = h
             w = self.listOfSCX[i+1]
@@ -44,6 +51,7 @@ class App:
 
         if not self.player.update_alive():
             self.scene_changer()
+            self.render("showTitle")
 
     def make_collision(self):
         pass
@@ -62,17 +70,6 @@ class Player:
     '''
     Description of class plyaer
         -Methods-
-            updateDeltas:
-                judge sensing data. it returns True or False.
-
-
-            isFlying:
-                player's flying Flag. it returns True or False.
-
-
-            isGliding:
-                player's gliding Flag. it returns True or False.
-
 
             act:
                 let player does something. it worked by move method.
@@ -80,10 +77,6 @@ class Player:
             move:
                 give int value that you want to move the player.
 
-
-        -Parameters-
-            isEnd:
-                bring back to title because player is dying.
     '''
     def __init__(self, x=0, y=0):
         #initialize player's information
@@ -125,7 +118,6 @@ class Player:
         else :
             self.act("doFall")
 
-
     def act(self, whatDoing):
         whatTimes = 3
         doTimes = [0] * whatTimes
@@ -141,7 +133,6 @@ class Player:
         elif whatDoing == "doFall":
             for i in range(len(doTimes)):
                 self.move(0, 2)
-
 
     def move(self, dx, dy):
         self.posX += dx
