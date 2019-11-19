@@ -25,6 +25,7 @@ class Sensor:
         self.PIN = pin
         self.data = 0
         self.spi.open(0, 0)
+        self.type = Sensors.DEFAULT
 
     def __del__(self):
         self.spi.close()
@@ -50,6 +51,13 @@ class Sensor:
         """
         return self.mapped_data(self.data, 0, 1023, out_min, out_max)
 
+    def mapped_data(self):
+        """
+        変換されたデータを取得するメソッド
+        :return: 変換後のデータ
+        """
+        return self.mapped_data(self.data, 0, 1023, 0, 100)
+
     def read_data(self):
         adc = spi.xfer2([1, (8 + self.PIN) << 4, 0])
         self.data = ((adc[1] & 3) << 8) + adc[2]
@@ -74,6 +82,7 @@ class TouchSensor(Sensor):
 
     def __init__(self, pin: int = 0):
         super(TouchSensor, self).__init__(pin)
+        self.type = Sensors.TOUCH
 
     def __del__(self):
         super(TouchSensor, self).__del__()
@@ -83,6 +92,7 @@ class TemperatureSensor(Sensor):
 
     def __init__(self, pin: int = 0):
         super(TemperatureSensor, self).__init__(pin)
+        self.type = Sensors.TEMPERATURE
 
     def __del__(self):
         super(TemperatureSensor, self).__del__()
@@ -92,9 +102,18 @@ class LightSensor(Sensor):
 
     def __init__(self, pin: int = 0):
         super(LightSensor, self).__init__(pin)
+        self.type = Sensors.LIGHT
 
     def __del__(self):
         super(LightSensor, self).__del__()
+
+    def mapped_data(self):
+        """
+        変換されたデータを取得するメソッド
+        :return: 変換後のデータ
+        """
+        data = self.mapped_data(self.data, 0, 5000)
+        return self.mapped_data(data, 300, 3600, -30, 100)
 
 
 class DistanceSensor(Sensor):
