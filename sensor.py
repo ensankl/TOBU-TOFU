@@ -2,7 +2,6 @@
 from enum import Enum
 import spidev
 
-
 # copy test.py to this file
 
 # 0106 Touch
@@ -13,6 +12,7 @@ import spidev
 spi = spidev.SpiDev()
 spi.open(0, 0)
 
+
 class Sensors(Enum):
     TOUCH = 0
     TEMPERATURE = 1
@@ -22,7 +22,6 @@ class Sensors(Enum):
 
 
 class Sensor:
-    
 
     def __init__(self, pin: int = 0):
         self.PIN = pin
@@ -104,7 +103,7 @@ class TemperatureSensor(Sensor):
 
     def __del__(self):
         super(TemperatureSensor, self).__del__()
-        
+
     def mapped_data(self,
                     data: int = None,
                     in_min: int = None,
@@ -129,7 +128,7 @@ class TemperatureSensor(Sensor):
         # なんどくかゆるして
 
         if f:
-            data = self.mapped_data(data = self.data, out_min = 0, out_max = 5000)
+            data = self.mapped_data(data=self.data, out_min=0, out_max=5000)
             return self.mapped_data(data, 300, 3600, -30, 100)
         elif a and b and c:
             return self.mapped_data(self.data, 0, 1023, out_min, out_max)
