@@ -10,6 +10,9 @@ import spidev
 # 0109 Light
 # 0116 Distance
 
+spi = spidev.SpiDev()
+spi.open(0, 0)
+
 class Sensors(Enum):
     TOUCH = 0
     TEMPERATURE = 1
@@ -19,16 +22,15 @@ class Sensors(Enum):
 
 
 class Sensor:
-    spi = spidev.SpiDev()
+    
 
     def __init__(self, pin: int = 0):
         self.PIN = pin
-        self.data = 0
-        self.spi.open(0, 0)
+        self.data = -1
         self.type = Sensors.DEFAULT
 
     def __del__(self):
-        self.spi.close()
+        spi.close()
 
     def mapped_data(self,
                     data: int = None,
@@ -57,13 +59,15 @@ class Sensor:
             return self.mapped_data(self.data, 0, 1023, 0, 100)
         elif a and b and c:
             return self.mapped_data(self.data, 0, 1023, out_min, out_max)
+        elif b and c:
+            return self.mapped_data(data, 0, 1023, out_min, out_max)
         elif not f:
             return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
         else:
             raise TypeError('この引数じゃデータが変換できませんよ')
 
     def read_data(self):
-        adc = self.spi.xfer2([1, (8 + self.PIN) << 4, 0])
+        adc = spi.xfer2([1, (8 + self.PIN) << 4, 0])
         self.data = ((adc[1] & 3) << 8) + adc[2]
         return self.data
 
@@ -100,17 +104,7 @@ class TemperatureSensor(Sensor):
 
     def __del__(self):
         super(TemperatureSensor, self).__del__()
-
-
-class LightSensor(Sensor):
-
-    def __init__(self, pin: int = 0):
-        super(LightSensor, self).__init__(pin)
-        self.type = Sensors.LIGHT
-
-    def __del__(self):
-        super(LightSensor, self).__del__()
-
+        
     def mapped_data(self,
                     data: int = None,
                     in_min: int = None,
@@ -135,14 +129,26 @@ class LightSensor(Sensor):
         # なんどくかゆるして
 
         if f:
-            data = self.mapped_data(self.data, 0, 5000)
+            data = self.mapped_data(data = self.data, out_min = 0, out_max = 5000)
             return self.mapped_data(data, 300, 3600, -30, 100)
         elif a and b and c:
             return self.mapped_data(self.data, 0, 1023, out_min, out_max)
+        elif b and c:
+            return self.mapped_data(data, 0, 1023, out_min, out_max)
         elif not f:
             return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
         else:
             raise TypeError('この引数じゃデータが変換できませんよ')
+
+
+class LightSensor(Sensor):
+
+    def __init__(self, pin: int = 0):
+        super(LightSensor, self).__init__(pin)
+        self.type = Sensors.LIGHT
+
+    def __del__(self):
+        super(LightSensor, self).__del__()
 
 
 class DistanceSensor(Sensor):
