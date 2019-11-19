@@ -30,7 +30,12 @@ class Sensor:
     def __del__(self):
         self.spi.close()
 
-    def mapped_data(self, data: int, in_min: int, in_max: int, out_min: int, out_max: int):
+    def mapped_data(self,
+                    data: int = None,
+                    in_min: int = None,
+                    in_max: int = None,
+                    out_min: int = None,
+                    out_max: int = None):
         """
         データを指定の範囲に変換するメソッド
         :param data: 変換したいデータ
@@ -40,26 +45,25 @@ class Sensor:
         :param out_max: 変換後のデータの最大値
         :return: 変換後のデータ
         """
-        return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+        a = data is None
+        b = in_min is None
+        c = in_max is None
+        d = out_min is None
+        e = out_max is None
+        f = a and b and c and d and e
+        # なんどくかゆるして
 
-    def mapped_data(self, out_min: int, out_max: int):
-        """
-        データを指定の範囲に変換するメソッド
-        :param out_min: 変換後のデータの最低値
-        :param out_max: 変換後のデータの最大値
-        :return: 変換後のデータ
-        """
-        return self.mapped_data(self.data, 0, 1023, out_min, out_max)
-
-    def mapped_data(self):
-        """
-        変換されたデータを取得するメソッド
-        :return: 変換後のデータ
-        """
-        return self.mapped_data(self.data, 0, 1023, 0, 100)
+        if f:
+            return self.mapped_data(self.data, 0, 1023, 0, 100)
+        elif a and b and c:
+            return self.mapped_data(self.data, 0, 1023, out_min, out_max)
+        elif not f:
+            return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+        else:
+            raise TypeError('この引数じゃデータが変換できませんよ')
 
     def read_data(self):
-        adc = spi.xfer2([1, (8 + self.PIN) << 4, 0])
+        adc = self.spi.xfer2([1, (8 + self.PIN) << 4, 0])
         self.data = ((adc[1] & 3) << 8) + adc[2]
         return self.data
 
@@ -107,13 +111,38 @@ class LightSensor(Sensor):
     def __del__(self):
         super(LightSensor, self).__del__()
 
-    def mapped_data(self):
+    def mapped_data(self,
+                    data: int = None,
+                    in_min: int = None,
+                    in_max: int = None,
+                    out_min: int = None,
+                    out_max: int = None):
         """
-        変換されたデータを取得するメソッド
+        データを指定の範囲に変換するメソッド
+        :param data: 変換したいデータ
+        :param in_min: 変換前のデータの最低値
+        :param in_max: 変換前のデータの最大値
+        :param out_min: 変換後のデータの最低値
+        :param out_max: 変換後のデータの最大値
         :return: 変換後のデータ
         """
-        data = self.mapped_data(self.data, 0, 5000)
-        return self.mapped_data(data, 300, 3600, -30, 100)
+        a = data is None
+        b = in_min is None
+        c = in_max is None
+        d = out_min is None
+        e = out_max is None
+        f = a and b and c and d and e
+        # なんどくかゆるして
+
+        if f:
+            data = self.mapped_data(self.data, 0, 5000)
+            return self.mapped_data(data, 300, 3600, -30, 100)
+        elif a and b and c:
+            return self.mapped_data(self.data, 0, 1023, out_min, out_max)
+        elif not f:
+            return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+        else:
+            raise TypeError('この引数じゃデータが変換できませんよ')
 
 
 class DistanceSensor(Sensor):
