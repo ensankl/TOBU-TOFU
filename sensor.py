@@ -10,7 +10,6 @@ import spidev
 # 0116 Distance
 
 spi = spidev.SpiDev()
-spi.open(0, 0)
 
 
 class Sensors(Enum):
@@ -27,6 +26,7 @@ class Sensor:
         self.PIN = pin
         self.data = -1
         self.type = Sensors.DEFAULT
+        spi.open(0, 0)
 
     def __del__(self):
         spi.close()

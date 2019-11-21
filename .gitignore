@@ -103,6 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 resource/sampleStage.png
+resource/Title.png
 
 # .idea
 .idea/
