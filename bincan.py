@@ -30,17 +30,6 @@ class App:
     def init(self):
         #loading image
         pyxel.image(0).load(0, 0, "resource/cat.png")
-        #initialize status what player does
-        self.player_state = STATE.NONE
-        self.my_gamemode = SHOWMODE.Title
-        #initialize count for first or not
-        self.title_count = 0
-        #initialize flags
-        self.is_sensing = False
-        self.is_dead = False
-        #initialize player position
-        self.player_x = 0
-        self.player_y = self.FIELD_Y - 16
         #initialize dictionary for color pallet
         self.COLOR_PALLET = {
             "BLACK"       :   0,
@@ -60,6 +49,25 @@ class App:
             "PINK"        :   14,
             "FLESH"       :   15,
         }
+        #initialize status what player does
+        self.player_state   =   STATE.NONE
+        self.my_gamemode    =   SHOWMODE.Title
+        #initialize count for first or not
+        self.title_count    =   0
+        #initialize flags
+        self.is_sensing     =   False
+        self.is_dead        =   False
+        self.is_distance    =   False
+        self.is_temperature =   False
+        self.is_pressure    =   False
+        self.is_light       =   False
+        #initialize player information
+        self.player_x       =   50
+        self.player_y       =   self.FIELD_Y - 16
+        self.player_size_x  =   16
+        self.player_size_y  =   16
+        self.player_colkey  =   self.COLOR_PALLET["GLAY"]
+        #initialize colors
         self.BACKGROUND     =   self.COLOR_PALLET["BLACK"]
         self.GAMEMESSAGE    =   self.COLOR_PALLET["GLAY"]
         self.STAGE_GROUND   =   self.COLOR_PALLET["BROWN"]
@@ -84,24 +92,43 @@ class App:
 
     def update_title(self):
         if pyxel.btn(pyxel.KEY_D):
-            self.is_sensing = True
+            self.is_sensing     =   True
+            self.is_distance    =   True
             #sensor = Sensor.generate(Sensors.DISTANCE, 7)
         elif pyxel.btn(pyxel.KEY_T):
-            self.is_sensing = True
+            self.is_sensing     =   True
+            self.is_temperature =   True
             #sensor = Sensor.generate(Sensors.TEMPERATURE, 7)
         elif pyxel.btn(pyxel.KEY_L):
-            self.is_sensing = True
+            self.is_sensing     =   True
+            self.is_light       =   True
             #sensor = Sensor.generate(Sensors.LIGHT, 7)
         elif pyxel.btn(pyxel.KEY_P):
-            self.is_sensing = True
+            self.is_sensing     =   True
+            self.is_pressure    =   True
             #sensor = Sensor.generate(Sensors.TOUCH, 7)
         elif pyxel.btnp(pyxel.KEY_SPACE) and self.is_sensing:
             self.is_dead = False
             self.my_gamemode = SHOWMODE.SceneChange
 
     def update_main(self):
+        #WARNING : move player by "WSD"key now
+        #this should be like "if self.noise < sensor.mapped_data() <= self.walk"
+        if pyxel.btn(pyxel.KEY_W):
+            if 0 < self.player_y:
+                self.player_y       -=  1
+                self.player_state   =   STATE.FLYING
+        if pyxel.btn(pyxel.KEY_S):
+            if self.player_y < self.FIELD_Y - self.player_size_y:
+                self.player_y       +=  1
+                self.player_state   =   STATE.GLIDING
+        if pyxel.btn(pyxel.KEY_D):
+            if self.player_x < pyxel.width - self.player_size_x:
+                self.player_x       +=  1
+                self.player_state   =   STATE.WALKING
+
         #screen transition
-        if pyxel.btnp(pyxel.KEY_E):
+        if pyxel.btn(pyxel.KEY_E):
             self.is_dead = True
             self.is_sensing = False
         else:
@@ -143,6 +170,7 @@ class App:
     def draw_main(self):
         pyxel.cls(self.BACKGROUND)
         pyxel.rect(0, self.FIELD_Y, pyxel.width, pyxel.height - self.FIELD_Y, self.STAGE_GROUND)
+        pyxel.blt(self.player_x, self.player_y, 0, 0, 0, self.player_size_x, self.player_size_y, self.player_colkey)
 
     def draw_ending(self):
         pass
