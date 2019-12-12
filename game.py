@@ -21,39 +21,47 @@ class App:
         #make instance of Player(spawnX, spawnY)
         self.player = Player(35,35)
         #make instance of Stage(windowWidth, windowHeight)
-        self.stage = Stage(800, 150)
+        self.stage = Stage(200, 150)
         #initialize pyxel rendering WindowSize
         pyxel.init(200, 150, caption="TouchME", fps=60)
-        #make instance of sensor
+        #load tilemap and run game
+        pyxel.load("Bincan.pyxel")
+        pyxel.run(update, draw)
+
+    def draw(self):
+        self.draw_title()
+        self.draw_game()
 
 
-    def render(self, showMode = "none"):
-        if showMode == "showTitle" or showMode == "showDead":
-            pyxel.cls(7)
-            if showMode == "shodeDead":
-                pyxel.text(25, 20, "NEW GAME+", 8)
-            #laoding title image is not working in this code
-            # pyxel.image(0).load(0, 0, "source/Title.png")
-            #intialize what kind of sensor is used to play
-            pyxel.text(35, 60, "SELECT SENSORS WHAT YOU WANNA PLAY", 5)
-            pyxel.text(50, 80, "D:Distance, T:Temperature,\n", 5)
-            pyxel.text(62, 90, "L:Light, P:Pressure", 5)
-            if pyxel.btn(pyxel.KEY_D):
-                sensor = Sensor.generate(Sensors.DISTANCE, 7)
-            elif pyxel.btn(pyxel.KEY_T):
-                sensor = Sensor.generate(Sensors.TEMPERATURE, 7)
-            elif pyxel.btn(pyxel.KEY_L):
-                sensor = Sensor.generate(Sensors.LIGHT, 7)
-            elif pyxel.btn(pyxel.KEY_P):
-                sensor = Sensor.generate(Sensors.TOUCH, 7)
+    def draw_game(self):
+        pass
 
-            pyxel.text(60, 120, "PRESS SPACE TO START", 0)
-            if pyxel.btn(pyxel.KEY_SPACE):
-                self.scene_changer()
-                self.render("game")
 
-        elif showMode == "game":
-            pass
+    def draw_title(self, showMode = "default"):
+        pyxel.cls(7)
+        if showMode == "dead":
+            pyxel.text(25, 20, "NEW GAME+", 8)
+        #laoding title image is not working in this code
+        # pyxel.image(0).load(0, 0, "source/Title.png")
+        #intialize what kind of sensor is used to play
+        pyxel.text(35, 60, "SELECT SENSORS WHAT YOU WANNA PLAY", 5)
+        pyxel.text(50, 80, "D:Distance, T:Temperature,\n", 5)
+        pyxel.text(62, 90, "L:Light, P:Pressure", 5)
+        if pyxel.btn(pyxel.KEY_D):
+            sensor = Sensor.generate(Sensors.DISTANCE, 7)
+            #pyxel.text(35, 80, "D:Distance")
+        elif pyxel.btn(pyxel.KEY_T):
+            sensor = Sensor.generate(Sensors.TEMPERATURE, 7)
+        elif pyxel.btn(pyxel.KEY_L):
+            sensor = Sensor.generate(Sensors.LIGHT, 7)
+        elif pyxel.btn(pyxel.KEY_P):
+            sensor = Sensor.generate(Sensors.TOUCH, 7)
+
+
+        pyxel.text(60, 120, "PRESS SPACE TO START", 0)
+        if pyxel.btn(pyxel.KEY_SPACE):
+            self.scene_changer()
+            self.draw_game()
 
 
     def scene_changer(self):
@@ -77,7 +85,7 @@ class App:
 
         if not self.player.update_alive():
             self.scene_changer()
-            self.render("showDead")
+            self.draw_title("dead")
 
 
     def make_collision(self):
@@ -88,9 +96,6 @@ class App:
     # (0, block.height), (block.width, 0), (block.width, (動くのはこっちだけ 中身は空洞で良い)block.height)
     #の座標を参照して当たり判定をつける マップタイルは固定なので1blockあたりの判定を定数倍して使用する
 
-class Stage:
-    def __init__(self, width, height):
-        pyxel.tilemap(0).set(0, 0, ["abcd"])
 
 
 class Player:
@@ -153,28 +158,21 @@ class Player:
 
 
     def act(self, whatDoing):
-        whatTimes = 3
-        doTimes = [0] * whatTimes
         if whatDoing == "doWalk":
-            for i in range(len(doTimes)):
-                self.move(2, 0)
-                #render(doWalk)
+            self.move(2, 0)
+            #render(doWalk)
         elif whatDoing == "doFly":
-            for i in range(len(doTimes)):
-                self.move(2, 2)
-                #render(doFly)
+            self.move(2, 2)
+            #render(doFly)
         elif whatDoing == "doGlide":
-            for i in range(len(doTimes)):
-                self.move(2, -1)
-                #render(doGlide)
+            self.move(2, -1)
+            #render(doGlide)
         elif whatDoing == "doFall":
-            for i in range(len(doTimes)):
-                self.move(0, 2)
-                #render(doFall)
+            self.move(0, 2)
+            #render(doFall)
         elif whatDoing == "none":
-            for i in range(len(doTimes)):
-                pass
-                #render(doNone)
+            pass
+
 
     def move(self, dx, dy):
         self.posX += dx
