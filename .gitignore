@@ -100,8 +100,10 @@ venv.bak/
 # mkdocs documentation
 /site
 
-# mypy
+# ignore files or auto made by environments
 .mypy_cache/
+.vscode
+tempCodeRunnerFile.py
 resource/sampleStage.png
 resource/Title.png
 
