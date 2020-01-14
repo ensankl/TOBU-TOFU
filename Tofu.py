@@ -39,7 +39,7 @@ class App:
         pyxel.init(200, 150, caption="TOBU!TOFU!", fps=60)
         self.init()
         self.init_player()
-        pyxel.cls(5)
+        self.stage = Stage()
         pyxel.run(self.update, self.draw)
 
     def init(self):
@@ -81,6 +81,7 @@ class App:
         self.is_on_ground   =   True
         self.is_top_passed  =   False
         self.once_called    =   False
+        self.is_moss        =   None
         #initialize colors
         self.BACKGROUND     =   self.COLOR_PALLET["BLACK"]
         self.GAMEMESSAGE    =   self.COLOR_PALLET["GLAY"]
@@ -92,15 +93,17 @@ class App:
         self.TOFU           =   0
         self.LOGO           =   1
         self.DOT_16         =   0
-        self.BLOCK_NONE     =   48
-        self.BLOCK_FLY      =   64
-        self.BLOCK_GLIDE    =   80
+        self.TOFU_NONE      =   48
+        self.TOFU_FLY       =   64
+        self.TOFU_GLIDE     =   80
+        self.BLOCK_NORMAL   =   96
+        self.BLOCK_MOSS     =   128
         #initialize array for TEST
         self.TEST_LIST      =   [i for i in range(100)]
 
     def init_player(self):
         #initialize player information
-        self.player_x       =   50
+        self.player_x       =   32
         self.player_y       =   self.FIELD_Y - 16
         self.vector_y       =   1
         self.player_size_x  =   16
@@ -110,12 +113,8 @@ class App:
         #self.NOSIE should be sensor.mapped_data()
         #bcuz it's default value for sensing
         self.NOISE          =   10
-        self.WALK           =   self.NOISE+self.NOISE*3
-        self.GLIDE          =   self.WALK+self.WALK*3
-
-    def init_stage(self):
-        self.block_size_x   =   16
-        self.block_size_y   =   16
+        self.WALK           =   self.NOISE+self.NOISE*5
+        self.GLIDE          =   self.WALK+self.NOISE*2
 
     def update(self):
         if self.now_gamemode == SHOWMODE.SceneChange:
@@ -167,6 +166,11 @@ class App:
                 self.now_gamemode = SHOWMODE.Title
 
     def update_title(self):
+        print(self.stage.block_pos)
+        print()
+        print(self.stage.gap_pos)
+        print()
+        print(self.stage.index)
         self.init_player()
         if pyxel.btn(pyxel.KEY_D):
             self.is_sensing     =   True
@@ -198,6 +202,7 @@ class App:
             self.now_gamemode = SHOWMODE.SceneChange
 
     def update_main(self):
+        self.stage.update_stage()
         this_index = pyxel.frame_count%100
         #FLAG : player is on ground or not
         if self.player_y == self.FIELD_Y - self.player_size_y:
@@ -214,27 +219,6 @@ class App:
             self.is_top_passed = True
         elif self.is_on_ground:
             self.is_top_passed = False
-        #codes are below is temporary disable for testing
-        # if self.NOISE < sensor.mapped_data():
-        #     if sensor.mapped_data() <= self.WALK and self.is_on_ground:
-        #         if self.player_x < pyxel.width - self.player_size_x:
-        #             self.player_x       +=  1
-        #             self.player_state   =   STATE.WALKING
-        #     else:
-        #         if 0 <= self.player_y and sensor.mapped_data() < self.GLIDE:
-        #             self.player_y       -=  2
-        #             self.player_x       +=  1
-        #             self.player_state   =   STATE.FLYING
-        #             if self.GLIDE <= sensor.mapped_data() and self.is_top_passed:
-        #                 if self.player_y < self.FIELD_Y - self.player_size_y:
-        #                     self.player_y       +=  1
-        #                     self.player_x       +=  1
-        #                     self.player_state   =   STATE.GLIDING
-        #             elif not self.is_on_ground and self.is_top_passed and sensor.mapped_data() < self.GLIDE:
-        #                 self.player_y += 2
-        # if self.player_state == STATE.WALKING:
-        #     if sensor.mapped_data() <= self.NOISE:
-        #         self.player_state = STATE.NONE
 
         #this is temporary code for testing
         #delete or disable after testing
@@ -262,8 +246,6 @@ class App:
             else:
                 self.player_state = STATE.FALL
 
-
-
         self.was_data = self.TEST_LIST[this_index]
         #RELOAD POSITION TO DEBUG
         if pyxel.btn(pyxel.KEY_R):
@@ -277,6 +259,7 @@ class App:
         else:
             self.is_dead = False
         if self.is_dead:
+            #del sensor
             self.title_count += 1
             self.selected_sensor = SELECT.NONE
             self.was_gamemode = SHOWMODE.Main
@@ -373,6 +356,7 @@ class App:
     def draw_main(self):
         pyxel.cls(self.BACKGROUND)
         pyxel.rect(0, self.FIELD_Y, pyxel.width, pyxel.height - self.FIELD_Y, self.STAGE_GROUND)
+        self.stage.draw_stage()
         if self.player_state == STATE.NONE and self.is_on_ground:
             if pyxel.frame_count%60 < 15:
                 self.DOT_16 = 0
@@ -382,7 +366,7 @@ class App:
                 self.DOT_16 = 2
             elif pyxel.frame_count%60 < 59:
                 self.DOT_16 = 3
-            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.BLOCK_NONE, self.player_size_x, self.player_size_y, self.player_colkey)
+            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.TOFU_NONE, self.player_size_x, self.player_size_y, self.player_colkey)
 
         elif self.player_state == STATE.WALKING:
             if pyxel.frame_count%60 < 15:
@@ -393,7 +377,7 @@ class App:
                 self.DOT_16 = 2
             elif pyxel.frame_count%60 < 60:
                 self.DOT_16 = 3
-            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.BLOCK_NONE, self.player_size_x, self.player_size_y, self.player_colkey)
+            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.TOFU_NONE, self.player_size_x, self.player_size_y, self.player_colkey)
 
         elif self.player_state == STATE.FLYING:
             if pyxel.frame_count%60 < 20:
@@ -402,7 +386,7 @@ class App:
                 self.DOT_16     =   2
             elif pyxel.frame_count%60 < 60:
                 self.DOT_16     =   3
-            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.BLOCK_FLY, self.player_size_x, self.player_size_y, self.player_colkey)
+            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.TOFU_FLY, self.player_size_x, self.player_size_y, self.player_colkey)
 
         elif self.player_state == STATE.GLIDE:
             if not self.is_on_ground:
@@ -412,7 +396,7 @@ class App:
                     self.DOT_16     =   1
                 elif pyxel.frame_count%60 < 60:
                     self.DOT_16     =   2
-            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.BLOCK_GLIDE, self.player_size_x, self.player_size_y, self.player_colkey)
+            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.TOFU_GLIDE, self.player_size_x, self.player_size_y, self.player_colkey)
 
         elif self.player_state == STATE.FALL:
             if pyxel.frame_count%60 < 15:
@@ -423,7 +407,8 @@ class App:
                 self.DOT_16 = 1
             elif pyxel.frame_count%60 < 60:
                 self.DOT_16 = 0
-            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, 48, 16, 16, self.player_colkey)
+            pyxel.blt(self.player_x, self.player_y, self.TOFU, 16*self.DOT_16, self.TOFU_NONE, 16, 16, self.player_colkey)
+
 
     def draw_ending(self):
         pass
@@ -437,7 +422,39 @@ class App:
             return def_num
 
 
-    def block_generate(self, upper_limit, res_x, res_y, moss):
-        pass
+class Stage:
+    def __init__(self):
+        self.stage_vector_x =   -1
+        self.index          =   1
+        self.block_pos      =   [[0, 102]]
+        self.block_size     =   [[4, 3]]
+        self.gap_pos        =   [64]
+        self.gap_size       =   []
+        self.temp_x         =   0
+        self.temp_y         =   0
+        self.temp_gap       =   0
+        self.spawn_x        =   0
+        self.spawn_y        =   102
+        self.is_created     =   False
+        self.BACKGROUND     =   0
+
+    def set_random(self):
+        self.temp_gap   = random.randint(3, 8)
+        self.temp_x     = random.randint(1, 3)
+        self.temp_y     = random.randint(1, 5)
+
+    def generate_block(self):
+        self.set_random()
+
+
+    def draw_stage(self):
+        #spawn point
+        pyxel.bltm(self.spawn_x, self.spawn_y, 0, 0, 0, 8, 6, self.BACKGROUND)
+        #pyxel.blt()
+
+    def update_stage(self):
+        if not self.is_created:
+            self.init_stage()
+
 
 App()
