@@ -453,8 +453,8 @@ class Stage:
         #pyxel.blt()
 
     def update_stage(self):
-        if not self.is_created:
-            self.init_stage()
+        #if right side is empty, generate new block or gap
+        pass
 
 
 App()
