@@ -1,9 +1,9 @@
 import pyxel
 from enum import Enum, auto
 import random
-#from sensor import *
+from sensor import *
 
-sensor = None
+sensor = Sensor()
 
 class STATE(Enum):
     NONE        = auto()
@@ -187,22 +187,30 @@ class App:
         elif pyxel.btn(pyxel.KEY_SPACE) and self.is_sensing:
             self.is_dead = False
             if self.selected_sensor == SELECT.DISTANCE:
-                #sensor = Sensor.generate(Sensors.DISTANCE, 7)
+                #sensor = Sensor.generate(Sensors.DISTANCE, 0)
                 pass
             elif self.selected_sensor == SELECT.TEMPERATURE:
-                #sensor = Sensor.generate(Sensors.TEMPERATURE, 7)
+                #sensor = Sensor.generate(Sensors.TEMPERATURE, 0)
                 pass
             elif self.selected_sensor == SELECT.LIGHT:
-                #sensor = Sensor.generate(Sensors.LIGHT, 7)
+                #print('through LIGHT GENERATOR')
+                #sensor = Sensor.generate(Sensors.LIGHT, 0)
                 pass
             elif self.selected_sensor == SELECT.PRESSURE:
-                #sensor = Sensor.generate(Sensors.TOUCH, 7)
+                #sensor = Sensor.generate(Sensors.TOUCH, 0)
                 pass
             self.was_gamemode = SHOWMODE.Title
             self.now_gamemode = SHOWMODE.SceneChange
 
     def update_main(self):
-        self.stage.update_stage()
+        'sensor debug''''
+        a = sensor.read_data()
+        b = sensor.mapped_data()
+        print(str(a) + '/' + str(b))
+        if pyxel.btn(pyxel.KEY_ESCAPE):
+            Sensor.close()
+            Esc()
+        #'''
         this_index = pyxel.frame_count%100
         #FLAG : player is on ground or not
         if self.player_y == self.FIELD_Y - self.player_size_y:
