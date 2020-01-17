@@ -10,8 +10,9 @@ import spidev
 # 0116 Distance
 
 spi = spidev.SpiDev()
-spi.open(0,0)
+spi.open(0, 0)
 spi.max_speed_hz = 5000
+
 
 class Sensors(Enum):
     TOUCH = 0
@@ -27,10 +28,10 @@ class Sensor:
         self.PIN = pin
         self.data = -1
         self.type = Sensors.DEFAULT
-        #spi.open(0, 0)
+        # spi.open(0, 0)
 
-    #def __del__(self):
-        #spi.close()
+    # def __del__(self):
+    # spi.close()
 
     def mapped_data(self,
                     data: int = None,
@@ -84,24 +85,24 @@ class Sensor:
 
         elif sensor == Sensors.DISTANCE:
             return DistanceSensor(pin)
-        
+
     @classmethod
-    def open_spi(self):
+    def open_spi(cls):
         spi.open(0, 0)
-        
+
     @classmethod
-    def close_spi(self):
+    def close_spi(cls):
         spi.close()
-        
-        
+
+
 class TouchSensor(Sensor):
 
     def __init__(self, pin: int = 0):
         super(TouchSensor, self).__init__(pin)
         self.type = Sensors.TOUCH
 
-    #def __del__(self):
-        #super(TouchSensor, self).__del__()
+    # def __del__(self):
+    # super(TouchSensor, self).__del__()
 
 
 class TemperatureSensor(Sensor):
@@ -110,8 +111,8 @@ class TemperatureSensor(Sensor):
         super(TemperatureSensor, self).__init__(pin)
         self.type = Sensors.TEMPERATURE
 
-    #def __del__(self):
-        #super(TemperatureSensor, self).__del__()
+    # def __del__(self):
+    # super(TemperatureSensor, self).__del__()
 
     def mapped_data(self,
                     data: int = None,
@@ -155,8 +156,8 @@ class LightSensor(Sensor):
         super(LightSensor, self).__init__(pin)
         self.type = Sensors.LIGHT
 
-    #def __del__(self):
-        #super(LightSensor, self).__del__()
+    # def __del__(self):
+    # super(LightSensor, self).__del__()
 
 
 class DistanceSensor(Sensor):
@@ -164,8 +165,8 @@ class DistanceSensor(Sensor):
     def __init__(self, pin: int = 0):
         super(DistanceSensor, self).__init__(pin)
 
-    #def __del__(self):
-        #super(DistanceSensor, self).__del__()
+    # def __del__(self):
+    # super(DistanceSensor, self).__del__()
 
     def mapped_data(self,
                     data: int = None,
