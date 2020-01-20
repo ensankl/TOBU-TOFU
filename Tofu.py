@@ -180,8 +180,6 @@ class App:
                 self.now_gamemode = SHOWMODE.Title
 
     def update_title(self):
-        self.init_player()
-        self.stage.init_stage()
         if pyxel.btn(pyxel.KEY_D):
             self.is_sensing     =   True
             self.selected_sensor=   SELECT.DISTANCE
@@ -209,12 +207,14 @@ class App:
             elif self.selected_sensor == SELECT.PRESSURE:
                 #sensor = Sensor.generate(Sensors.TOUCH, 0)
                 pass
+            self.init_player()
+            self.stage.init_stage()
             self.was_gamemode = SHOWMODE.Title
             self.now_gamemode = SHOWMODE.SceneChange
 
     def update_main(self):
         if pyxel.btnr(pyxel.KEY_B):
-            self.TEST_INT = random.randint(30, 100)
+            self.TEST_INT = random.randint(60, 100)
 
         'sensor debug''''
         a = sensor.read_data()
@@ -259,6 +259,7 @@ class App:
             self.flag_D = False
         if (self.flag_a and self.flag_A) or (self.flag_b and self.flag_B) or (self.flag_c and self.flag_C) or (self.flag_d and self.flag_D):
             self.is_on_ground = True
+            self.hit_counter  = 0
         else:
             self.is_on_ground = False
         #do gravity if player is not on ground
@@ -307,19 +308,25 @@ class App:
                 self.player_state = STATE.FLYING
 
         if self.player_state == STATE.FLYING and 0 <= self.player_y:
-            self.stage.move_stage(-2)
+            self.stage.move_stage(-1)
             self.player_y -= 2
             if not self.is_top_passed:
                 self.player_state = STATE.FLYING
             elif self.GLIDE < self.TEST_INT:
-                self.stage.move_stage(-2)
                 self.player_state = STATE.GLIDE
             elif self.TEST_INT < self.NOISE:
                 self.player_state = STATE.FALL
 
-        if self.player_y == 0:
+        if self.player_state == STATE.GLIDE:
+            pass
+            if not self.stage.block_1_pos[1] < self.player_y+self.player_size_y or not self.stage.block_2_pos[1] < self.player_y+self.player_size_y or not self.stage.block_3_pos[1] < self.player_y+self.player_size_y:
+                if not self.stage.block_1_pos[0] == self.player_x+self.player_size_x or not self.stage.block_2_pos[0] == self.player_x+self.player_size_x or not self.stage.block_3_pos[0] == self.player_x+self.player_size_x:
+                    self.stage.move_stage(-1)
+
+        if self.player_y < 1:
             self.hit_counter += 1
-            if 100 < self.hit_counter:
+            print('hitcounter = {}'.format(self.hit_counter))
+            if 30 < self.hit_counter:
                 self.player_state = STATE.FALL
 
         self.stage.update_stage()
@@ -509,13 +516,21 @@ class Stage:
         self.temp_gap       =   0
         self.is_early       =   True
         self.is_created     =   False
+        self.block_1_size   =   None
+        self.block_2_size   =   None
+        self.block_3_size   =   None
+        self.block_1_pos    =   None
+        self.block_2_pos    =   None
+        self.block_3_pos    =   None
+        self.block_1_tile   =   None
+        self.block_2_tile   =   None
+        self.block_3_tile   =   None
         self.BACKGROUND     =   0
         self.GROUND         =   102
         self.GAP_Y_LENGTH   =   48
         self.COLUMS_3       =   [[0, 10, 10, 6], [16, 10, 8, 6], [24, 10, 6, 6], [32, 10, 4, 6], [40, 10, 2, 6]]
         self.COLUMS_2       =   [[48, 12, 10, 4], [64, 12, 8, 4], [72, 12, 6, 4], [80, 12, 4, 4], [88, 12, 2, 4]]
         self.COLUMS_1       =   [[96, 14, 10, 2], [112, 14, 8, 2], [120, 14, 6, 2], [128, 14, 4, 2], [136, 14, 2, 2]]
-        self.init_stage()
 
     def init_stage(self):
         self.spawn_size     =   [4, 3]
@@ -527,7 +542,7 @@ class Stage:
         self.block_1_pos    =   [self.gap_1_pos+self.gap_1_size*16, 150-self.temp_y*16]
         if self.temp_y == 3:
             self.block_1_tile = self.COLUMS_3[self.temp_x-1]
-        elif self.temp_y ==2:
+        elif self.temp_y == 2:
             self.block_1_tile = self.COLUMS_2[self.temp_x-1]
         elif self.temp_y == 1:
             self.block_1_tile = self.COLUMS_1[self.temp_x-1]
@@ -567,22 +582,29 @@ class Stage:
         if self.gap_1_pos+self.gap_1_size*16 < 0:
             self.set_random()
             self.gap_1_size = self.temp_gap
+            # print("start gap1")
+            # print(self.gap_1_size)
             self.gap_1_pos  = self.block_3_pos[0]+self.block_3_size[0]*16
-        elif self.block_1_pos[0]+self.block_1_size[0]*16 < 0:
+            # print(self.gap_1_pos)
+            # print("end gap1")
+        if self.block_1_pos[0]+self.block_1_size[0]*16 < 0:
             self.set_random()
             self.block_1_size = [self.temp_x, self.temp_y]
+            # print(self.block_1_size)
             self.block_1_pos  = [self.gap_1_pos+self.gap_1_size*16, 150-self.temp_y*16]
+            # print(self.block_1_pos)
             if self.temp_y == 3:
                 self.block_1_tile = self.COLUMS_3[self.temp_x-1]
-            elif self.temp_y ==2:
+            elif self.temp_y == 2:
                 self.block_1_tile = self.COLUMS_2[self.temp_x-1]
             elif self.temp_y == 1:
                 self.block_1_tile = self.COLUMS_1[self.temp_x-1]
-        elif self.gap_2_pos+self.gap_2_size*16 < 0:
+            # print(self.block_1_tile)
+        if self.gap_2_pos+self.gap_2_size*16 < 0:
             self.set_random()
             self.gap_2_size = self.temp_gap
             self.gap_2_pos  = self.block_1_pos[0]+self.block_1_size[0]*16
-        elif self.block_2_pos[0]+self.block_2_size[0]*16 < 0:
+        if self.block_2_pos[0]+self.block_2_size[0]*16 < 0:
             self.set_random()
             self.block_2_size = [self.temp_x, self.temp_y]
             self.block_2_pos  = [self.gap_2_pos+self.gap_2_size*16, 150-self.temp_y*16]
@@ -592,20 +614,20 @@ class Stage:
                 self.block_2_tile = self.COLUMS_2[self.temp_x-1]
             elif self.temp_y == 1:
                 self.block_2_tile = self.COLUMS_1[self.temp_x-1]
-        elif self.gap_3_pos+self.gap_3_size*16 < 0:
+        if self.gap_3_pos+self.gap_3_size*16 < 0:
             self.set_random()
             self.gap_3_size = self.temp_gap
             self.gap_3_pos  = self.block_2_pos[0]+self.block_2_size[0]*16
-        elif self.block_3_pos[0]+self.block_3_size[0]*16 < 0:
+        if self.block_3_pos[0]+self.block_3_size[0]*16 < 0:
             self.set_random()
             self.block_3_size = [self.temp_x, self.temp_y]
             self.block_3_pos  = [self.gap_3_pos+self.gap_3_size*16, 150-self.temp_y*16]
             if self.temp_y == 3:
-                self.block_3_tile = self.COLUMS_3[self.temp_x-1]
+                self.block_3_tile = self.COLUMS_3[5-self.temp_x]
             elif self.temp_y == 2:
-                self.block_3_tile = self.COLUMS_2[self.temp_x-1]
+                self.block_3_tile = self.COLUMS_2[5-self.temp_x-1]
             elif self.temp_y == 1:
-                self.block_3_tile = self.COLUMS_1[self.temp_x-1]
+                self.block_3_tile = self.COLUMS_1[5-self.temp_x-1]
 
 
     def draw_stage(self):
