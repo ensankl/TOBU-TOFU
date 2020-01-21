@@ -2,9 +2,9 @@ import pyxel
 from enum import Enum, auto
 import random
 
-# from sensor import *
+from sensor import *
 
-# sensor = Sensor()
+sen = Sensor()
 
 class STATE(Enum):
     NONE = auto()
@@ -123,9 +123,9 @@ class App:
         # initialize threshold value for decide what's going on
         # self.NOSIE should be sensor.mapped_data()
         # bcuz it's default value for sensing
-        self.NOISE = 20
-        self.WALK = 60
-        self.GLIDE = 80
+        self.NOISE = 5
+        self.WALK = 40
+        self.GLIDE = 90
         # flags for is_on_ground
         self.flag_a = False
         self.flag_b = False
@@ -139,10 +139,10 @@ class App:
         self.TEST_INT = 0
 
     def update(self):
-        if pyxel.btn(pyxel.KEY_Q):
-            # temporary disabled for test
-            # Sensor.close_spi()
-            pyxel.quit()
+        if pyxel.btn(pyxel.KEY_ESCAPE) or pyxel.btn(pyxel.KEY_Q):
+            Sensor.close_spi()
+            Esc()
+
         if self.now_gamemode == SHOWMODE.SceneChange:
             self.update_scenechange()
         elif self.now_gamemode == SHOWMODE.Title:
@@ -193,6 +193,7 @@ class App:
                 self.now_gamemode = SHOWMODE.Title
 
     def update_title(self):
+        global sen
         if pyxel.btn(pyxel.KEY_D):
             self.is_sensing = True
             self.selected_sensor = SELECT.DISTANCE
@@ -208,17 +209,19 @@ class App:
         elif pyxel.btn(pyxel.KEY_SPACE) and self.is_sensing:
             self.is_dead = False
             if self.selected_sensor == SELECT.DISTANCE:
-                # sensor = Sensor.generate(Sensors.DISTANCE, 0)
+                sen = Sensor.generate(Sensors.DISTANCE, 3)
                 pass
             elif self.selected_sensor == SELECT.TEMPERATURE:
-                # sensor = Sensor.generate(Sensors.TEMPERATURE, 0)
+                sen = Sensor.generate(Sensors.TEMPERATURE, 1)
+                #print(sensor)
                 pass
             elif self.selected_sensor == SELECT.LIGHT:
-                # print('through LIGHT GENERATOR')
-                # sensor = Sensor.generate(Sensors.LIGHT, 0)
+                #print('through LIGHT GENERATOR')
+                sen = Sensor.generate(Sensors.LIGHT, 2)
+                #print(sensor)
                 pass
             elif self.selected_sensor == SELECT.PRESSURE:
-                # sensor = Sensor.generate(Sensors.TOUCH, 0)
+                sen = Sensor.generate(Sensors.TOUCH, 0)
                 pass
             self.init_player()
             self.stage.init_stage()
@@ -226,16 +229,12 @@ class App:
             self.now_gamemode = SHOWMODE.SceneChange
 
     def update_main(self):
-        if pyxel.btnr(pyxel.KEY_B):
-            self.TEST_INT = random.randint(50, 100)
-
-        'sensor debug''''
-        a = sensor.read_data()
-        b = sensor.mapped_data()
+        #'sensor debug''''
+        print(sen)
+        a = sen.read_data()
+        b = sen.mapped_data()
         print(str(a) + '/' + str(b))
-        if pyxel.btn(pyxel.KEY_ESCAPE):
-            Sensor.close()
-            Esc()
+
         #'''
         # FLAG : player is on ground or not
         if self.stage.block_1_pos[0] <= self.player_x + self.player_size_x and self.player_x < self.stage.block_1_pos[
@@ -284,10 +283,10 @@ class App:
         if not self.is_on_ground:
             self.player_y += self.vector_y
         # FLAG : data is increasing or not
-        # if sensor.mapped_data() < self.was_data:
-        #     self.is_top_passed = True
-        if self.TEST_INT < self.was_data:
+        if sen.mapped_data() < self.was_data:
             self.is_top_passed = True
+        #if self.TEST_INT < self.was_data:
+        #    self.is_top_passed = True
         elif self.is_on_ground:
             self.is_top_passed = False
 
@@ -317,12 +316,12 @@ class App:
         #         self.player_state = STATE.FALL
 
         if self.is_on_ground:
-            if self.TEST_INT < self.NOISE:
+            if sen.mapped_data() < self.NOISE:
                 self.player_state = STATE.NONE
-            elif self.TEST_INT < self.WALK:
+            elif sen.mapped_data() < self.WALK:
                 self.player_state = STATE.WALKING
                 self.stage.move_stage(-1)
-            elif self.WALK < self.TEST_INT:
+            elif self.WALK < sen.mapped_data():
                 self.player_state = STATE.FLYING
 
         if self.player_state == STATE.FLYING and 0 <= self.player_y:
@@ -330,9 +329,9 @@ class App:
             self.player_y -= 2
             if not self.is_top_passed:
                 self.player_state = STATE.FLYING
-            elif self.GLIDE < self.TEST_INT:
+            elif self.GLIDE < sen.mapped_data():
                 self.player_state = STATE.GLIDE
-            elif self.TEST_INT < self.NOISE:
+            elif sen.mapped_data() < self.NOISE:
                 self.player_state = STATE.FALL
 
         if self.player_state == STATE.GLIDE:
@@ -359,7 +358,7 @@ class App:
 
         self.stage.update_stage()
 
-        self.was_data = self.TEST_INT
+        self.was_data = sen.mapped_data()
         # RELOAD POSITION TO DEBUG
         if 150 < self.player_y:
             self.init_player()
@@ -368,12 +367,11 @@ class App:
         # screen transition
         if pyxel.btn(pyxel.KEY_R):
             self.is_dead = True
-            # add delete sensor
             self.is_sensing = False
         else:
             self.is_dead = False
         if self.is_dead:
-            # del sensor
+            # del sen
             self.stage.init_stage()
             self.title_count += 1
             self.selected_sensor = SELECT.NONE

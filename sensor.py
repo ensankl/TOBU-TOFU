@@ -57,7 +57,7 @@ class Sensor:
         # なんどくかゆるして
 
         if f:
-            return self.mapped_data(self.data, 0, 1023, 0, 100)
+            return self.mapped_data(self.data, 0, 1023, 100, 0)
         elif a and b and c:
             return self.mapped_data(self.data, 0, 1023, out_min, out_max)
         elif b and c:
@@ -138,8 +138,8 @@ class TemperatureSensor(Sensor):
         # なんどくかゆるして
 
         if f:
-            data = self.mapped_data(data=self.data, out_min=0, out_max=5000)
-            return self.mapped_data(data, 300, 3600, -30, 100)
+            return self.mapped_data(data=self.data, out_min=0, out_max=100)
+            #return self.mapped_data(data, 300, 3600, -30, 100)
         elif a and b and c:
             return self.mapped_data(self.data, 0, 1023, out_min, out_max)
         elif b and c:
@@ -158,6 +158,40 @@ class LightSensor(Sensor):
 
     # def __del__(self):
     # super(LightSensor, self).__del__()
+    
+    def mapped_data(self,
+                    data: int = None,
+                    in_min: int = None,
+                    in_max: int = None,
+                    out_min: int = None,
+                    out_max: int = None):
+        """
+        データを指定の範囲に変換するメソッド
+        :param data: 変換したいデータ
+        :param in_min: 変換前のデータの最低値
+        :param in_max: 変換前のデータの最大値
+        :param out_min: 変換後のデータの最低値
+        :param out_max: 変換後のデータの最大値
+        :return: 変換後のデータ
+        """
+        a = data is None
+        b = in_min is None
+        c = in_max is None
+        d = out_min is None
+        e = out_max is None
+        f = a and b and c and d and e
+        # なんどくかゆるして
+
+        if f:
+            return self.mapped_data(self.data, 0, 1023, 0, 100)
+        elif a and b and c:
+            return self.mapped_data(self.data, 0, 1023, out_min, out_max)
+        elif b and c:
+            return self.mapped_data(data, 0, 1023, out_min, out_max)
+        elif not f:
+            return (data - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+        else:
+            raise TypeError('この引数じゃデータが変換できませんよ')
 
 
 class DistanceSensor(Sensor):
